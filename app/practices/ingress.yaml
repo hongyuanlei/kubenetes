@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: practice
+  name: practice-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: www.spring-application.com  # Replace with your domain
+      http:
+        paths:
+          - path: /myapplication01
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-application-service
+                port:
+                  number: 8080
