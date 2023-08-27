@@ -13,6 +13,10 @@ kind: Ingress
 metadata:
   namespace: practice
   name: practice-ingress
+  annotations:
+    # disable force http to https: https://kubernetes.github.io/ingress-nginx/examples/rewrite/
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   tls:
