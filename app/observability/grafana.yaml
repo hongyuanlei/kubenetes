@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - name: http
+              containerPort: 3000
+          volumeMounts:
+            - name: grafana-data
+              mountPath: /var/lib/grafana
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: grafana-clock-panel
+      volumes:
+        - name: grafana-data
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  selector:
+    app: grafana
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 3000
+
