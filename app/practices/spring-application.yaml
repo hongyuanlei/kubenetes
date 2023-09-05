@@ -17,6 +17,7 @@ spec:
       containers:
         - name: spring-application
           image: ishuiyutian/spring-application:1.2
+          imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
