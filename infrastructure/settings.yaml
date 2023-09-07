@@ -25,5 +25,5 @@ software:
   os: xUbuntu_22.04
 
 shared_folders:
-  - host_path: /Users/ylhong/workspace/vagrant/kubenetes/app
+  - host_path: /Users/ylhong/workspace/vagrant/kubernetes/app
     vm_path: /home/vagrant/workspace/app

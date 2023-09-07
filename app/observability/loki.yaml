@@ -5,28 +5,62 @@ metadata:
   name: loki-config
   namespace: observability
 data:
-  loki.yaml: |
+  local-config.yaml: |-
     auth_enabled: false
+    server:
+      http_listen_port: 3100
+    ingester:
+      address: 127.0.0.1
+      ring:
+        kvstore:
+          store: inmemory
+        replication_factor: 1
+        heartbeat_timeout: 30s
+    schema_config:
+      configs:
+        - from: 2020-10-15
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+  promtail-config.yaml: |-
+    clients:
+      - url: http://loki-server:3100/loki/api/v1/push
+    positions:
+      filename: /tmp/positions.yaml
+    scrape_configs:
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: replace
+            target_label: app
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: loki
+  name: loki-server
   namespace: observability
 spec:
   replicas: 1
-  serviceName: loki
+  serviceName: loki-server
   selector:
     matchLabels:
-      app: loki
+      app: loki-server
   template:
     metadata:
       labels:
-        loki
+        loki-server
     spec:
       containers:
-        - name: loki
+        - name: loki-server
           image: granfana/loki:latest
+          args:
+            - -config.file=/etc/loki/local-config.yaml
+            - -target=local
           ports:
             - name: http
               containerPort: 3100
@@ -37,18 +71,49 @@ spec:
         - name: config
           configMap:
             name: loki-config
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: loki
+  name: loki-server
   namespace: observability
 spec:
   selector:
-    app: loki
+    app: loki-server
   ports:
     - name: http
       protocol: TCP
       port: 3100
       targetPort: 3100
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: promtail
+  namespace: observability
+spec:
+  selector:
+    matchLabels:
+      app: promtail
+  template:
+    metadata:
+      labels:
+        app: promtail
+    spec:
+      containers:
+        - name: promtail
+          image: grafana/promtail:latest
+          args:
+            - -config.file=/etc/promtail/promtail-config.yaml
+            - -client.url=http://loki-server:3100/loki/api/v1/push
+            - -client.external-labels=job=kubernetes-pods
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/promtail
+      volumes:
+        - name: config-volume
+          configMap:
+            name: loki-config
 

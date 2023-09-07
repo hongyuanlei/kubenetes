@@ -48,9 +48,7 @@ metadata:
 spec:
   selector:
     app: spring-application
-#  type: NodePort
   ports:
     - port: 8080
       targetPort: 8080
       protocol: TCP
-#      nodePort: 32001
