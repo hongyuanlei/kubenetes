@@ -74,11 +74,14 @@ sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg \
   | sudo gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" \
   | sudo tee /etc/apt/sources.list.d/kubernetes.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" \
+  | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update -y
 sudo apt-get install -y \
   kubelet="$KUBERNETES_VERSION" \
   kubectl="$KUBERNETES_VERSION" \
-  kubeadm="$KUBERNETES_VERSION"
+  kubeadm="$KUBERNETES_VERSION" \
+  helm
 sudo apt-get update -y
 sudo apt-get install -y jq
 
